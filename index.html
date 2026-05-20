@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Analítico Backlog SUL</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000000;
+            min-height: 100vh;
+            color: #ffffff;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #000000;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #000000;
+            border-bottom: 2px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            height: 45px;
+            width: auto;
+        }
+
+        .header-center {
+            text-align: center;
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-right {
+            height: 30px;
+            width: auto;
+        }
+
+        .update-info {
+            font-size: 0.8rem;
+            color: #888888;
+            text-align: right;
+        }
+
+        /* KPI Cards */
+        .kpi-section {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .kpi-card.total {
+            background: linear-gradient(180deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        .kpi-card.p1 {
+            background: linear-gradient(180deg, #c53030 0%, #9b2c2c 100%);
+        }
+
+        .kpi-card.p2 {
+            background: linear-gradient(180deg, #dd6b20 0%, #c05621 100%);
+        }
+
+        .kpi-card.p3 {
+            background: linear-gradient(180deg, #d69e2e 0%, #b7791f 100%);
+        }
+
+        .kpi-card.p4 {
+            background: linear-gradient(180deg, #38a169 0%, #2f855a 100%);
+        }
+
+        .kpi-card.critico {
+            background: linear-gradient(180deg, #805ad5 0%, #6b46c1 100%);
+        }
+
+        .kpi-icon {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .kpi-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 8px 12px;
+            background-color: #1a1a1a;
+            border-left: 4px solid #4299e1;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background-color: #0d0d0d;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #222;
+        }
+
+        .card-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4299e1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-title span {
+            font-size: 1rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+
+        th, td {
+            padding: 8px 6px;
+            text-align: left;
+            border-bottom: 1px solid #222;
+        }
+
+        th {
+            background-color: #1a1a1a;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.5px;
+            color: #a0aec0;
+        }
+
+        tr:hover {
+            background-color: #111;
+        }
+
+        .total-row {
+            background-color: #1a1a1a;
+            font-weight: 700;
+        }
+
+        /* Status colors */
+        .text-red { color: #fc8181; }
+        .text-orange { color: #f6ad55; }
+        .text-yellow { color: #faf089; }
+        .text-green { color: #68d391; }
+        .text-blue { color: #63b3ed; }
+        .text-purple { color: #b794f4; }
+
+        .bg-red { background-color: rgba(252, 129, 129, 0.2); }
+        .bg-orange { background-color: rgba(246, 173, 85, 0.2); }
+        .bg-yellow { background-color: rgba(250, 240, 137, 0.2); }
+        .bg-green { background-color: rgba(104, 211, 145, 0.2); }
+
+        /* Value highlights */
+        .value-highlight {
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 220px;
+        }
+
+        /* Alerts Section */
+        .alerts-section {
+            background-color: #0d0d0d;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #222;
+            margin-bottom: 20px;
+        }
+
+        .alerts-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fc8181;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .alerts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 6px;
+            background-color: #111;
+        }
+
+        .alert-item.warning {
+            border-left: 3px solid #fc8181;
+        }
+
+        .alert-item.insight {
+            border-left: 3px solid #63b3ed;
+        }
+
+        .alert-icon {
+            font-size: 1.2rem;
+        }
+
+        .alert-text {
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .alert-label {
+            font-weight: 700;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        /* Metrics Card */
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #a0aec0;
+            font-size: 0.75rem;
+        }
+
+        .metric-value {
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.7rem;
+            color: #555;
+            border-top: 1px solid #222;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .kpi-section {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .main-grid, .charts-section {
+                grid-template-columns: 1fr;
+            }
+            .alerts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .kpi-section {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <img src="./assets/logo-empresa.png" alt="Logo Empresa" class="logo">
+            </div>
+            <div class="header-center">
+                <h1>DASHBOARD ANALÍTICO BACKLOG SUL</h1>
+            </div>
+            <div class="header-right">
+                <img src="./assets/logo-parceiro.png" alt="Logo Parceiro" class="logo-right">
+                <div class="update-info">
+                    Última Atualização:<br>
+                    <strong>20/05/2026, 15:31</strong>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <section class="kpi-section">
+            <div class="kpi-card total">
+                <div class="kpi-icon">📊</div>
+                <div class="kpi-label">Total TAs Backlog</div>
+                <div class="kpi-value">143</div>
+            </div>
+            <div class="kpi-card p1">
+                <div class="kpi-icon">🔴</div>
+                <div class="kpi-label">Prioridade 1</div>
+                <div class="kpi-value">45</div>
+            </div>
+            <div class="kpi-card p2">
+                <div class="kpi-icon">🟠</div>
+                <div class="kpi-label">Prioridade 2</div>
+                <div class="kpi-value">19</div>
+            </div>
+            <div class="kpi-card p3">
+                <div class="kpi-icon">🟡</div>
+                <div class="kpi-label">Prioridade 3</div>
+                <div class="kpi-value">45</div>
+            </div>
+            <div class="kpi-card p4">
+                <div class="kpi-icon">🟢</div>
+                <div class="kpi-label">Prioridade 4</div>
+                <div class="kpi-value">34</div>
+            </div>
+            <div class="kpi-card critico">
+                <div class="kpi-icon">⚠️</div>
+                <div class="kpi-label">% Crítico (P1+P2)</div>
+                <div class="kpi-value">44,8%</div>
+            </div>
+        </section>
+
+        <!-- Main Data Grid -->
+        <section class="main-grid">
+            <!-- Distribuição por CRO -->
+            <div class="card">
+                <div class="card-title"><span>📍</span> Distribuição por CRO (Regional)</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>CRO</th>
+                            <th>Qtd TAs</th>
+                            <th>% Total</th>
+                            <th>P1</th>
+                            <th>P2</th>
+                            <th>P3+P4</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>PR/SC</td>
+                            <td class="value-highlight">104</td>
+                            <td>72,7%</td>
+                            <td class="text-red">28</td>
+                            <td class="text-orange">14</td>
+                            <td>62</td>
+                        </tr>
+                        <tr>
+                            <td>RS</td>
+                            <td class="value-highlight">37</td>
+                            <td>25,9%</td>
+                            <td class="text-red">17</td>
+                            <td class="text-orange">5</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td>INT</td>
+                            <td class="value-highlight">2</td>
+                            <td>1,4%</td>
+                            <td class="text-red">0</td>
+                            <td class="text-orange">0</td>
+                            <td>2</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL</td>
+                            <td class="value-highlight">143</td>
+                            <td>100,0%</td>
+                            <td>45</td>
+                            <td>19</td>
+                            <td>79</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Distribuição por Tipo de Site -->
+            <div class="card">
+                <div class="card-title"><span>🏢</span> Distribuição por Tipo de Site</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tipo Site</th>
+                            <th>Qtd</th>
+                            <th>%</th>
+                            <th>P1</th>
+                            <th>P2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Concentrador</td>
+                            <td class="value-highlight">70</td>
+                            <td>49,0%</td>
+                            <td class="text-red">30</td>
+                            <td class="text-orange">4</td>
+                        </tr>
+                        <tr>
+                            <td>Ponta</td>
+                            <td class="value-highlight">49</td>
+                            <td>34,3%</td>
+                            <td class="text-red">8</td>
+                            <td class="text-orange">8</td>
+                        </tr>
+                        <tr>
+                            <td>Crítico</td>
+                            <td class="value-highlight">20</td>
+                            <td>14,0%</td>
+                            <td class="text-red">4</td>
+                            <td class="text-orange">7</td>
+                        </tr>
+                        <tr>
+                            <td>CCC</td>
+                            <td class="value-highlight">4</td>
+                            <td>2,8%</td>
+                            <td class="text-red">3</td>
+                            <td class="text-orange">0</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL</td>
+                            <td class="value-highlight">143</td>
+                            <td>100,0%</td>
+                            <td>45</td>
+                            <td>19</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tipo Planta + Métricas -->
+            <div class="card">
+                <div class="card-title"><span>📱</span> Tipo Planta</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tipo Planta</th>
+                            <th>Qtd</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Móvel</td>
+                            <td class="value-highlight">140</td>
+                        </tr>
+                        <tr>
+                            <td>Fixa Integrada V2</td>
+                            <td class="value-highlight">2</td>
+                        </tr>
+                        <tr>
+                            <td>Fusionada</td>
+                            <td class="value-highlight">1</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL</td>
+                            <td class="value-highlight">143</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="card-title" style="margin-top: 15px;"><span>📈</span> Métricas Chave</div>
+                <div class="metric-row">
+                    <span class="metric-label">TAs > 30 dias</span>
+                    <span class="metric-value text-red">40</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Sites Críticos</span>
+                    <span class="metric-value text-orange">20</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">% Concentrador</span>
+                    <span class="metric-value text-blue">49,0%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Média Dias Backlog</span>
+                    <span class="metric-value">35</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Max Dias Backlog</span>
+                    <span class="metric-value text-red">517</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Municípios Únicos</span>
+                    <span class="metric-value text-purple">88</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Second Row -->
+        <section class="main-grid">
+            <!-- TOP 10 Municípios -->
+            <div class="card">
+                <div class="card-title"><span>🏙️</span> TOP 10 Municípios - Maior Backlog</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Município</th>
+                            <th>Qtd TAs</th>
+                            <th>P1</th>
+                            <th>P2</th>
+                            <th>% Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>CTA</td><td class="value-highlight">13</td><td class="text-red">4</td><td class="text-orange">2</td><td>9,1%</td></tr>
+                        <tr><td>2</td><td>CAN</td><td class="value-highlight">5</td><td class="text-red">1</td><td class="text-orange">1</td><td>3,5%</td></tr>
+                        <tr><td>3</td><td>BNU</td><td class="value-highlight">4</td><td class="text-red">2</td><td class="text-orange">1</td><td>2,8%</td></tr>
+                        <tr><td>4</td><td>CCO</td><td class="value-highlight">4</td><td class="text-red">1</td><td class="text-orange">0</td><td>2,8%</td></tr>
+                        <tr><td>5</td><td>FNS</td><td class="value-highlight">3</td><td class="text-red">1</td><td class="text-orange">1</td><td>2,1%</td></tr>
+                        <tr><td>6</td><td>NVG</td><td class="value-highlight">2</td><td class="text-red">1</td><td class="text-orange">0</td><td>1,4%</td></tr>
+                        <tr><td>7</td><td>JUU</td><td class="value-highlight">2</td><td class="text-red">0</td><td class="text-orange">0</td><td>1,4%</td></tr>
+                        <tr><td>8</td><td>PAE</td><td class="value-highlight">2</td><td class="text-red">1</td><td class="text-orange">0</td><td>1,4%</td></tr>
+                        <tr><td>9</td><td>SOO</td><td class="value-highlight">1</td><td class="text-red">1</td><td class="text-orange">0</td><td>0,7%</td></tr>
+                        <tr><td>10</td><td>PAC</td><td class="value-highlight">1</td><td class="text-red">1</td><td class="text-orange">0</td><td>0,7%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Aging -->
+            <div class="card">
+                <div class="card-title"><span>⏱️</span> Aging - Tempo no Backlog</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Faixa de Tempo</th>
+                            <th>Qtd TAs</th>
+                            <th>%</th>
+                            <th>Acum.</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-green">
+                            <td>≤ 24 horas</td>
+                            <td class="value-highlight">50</td>
+                            <td>35,0%</td>
+                            <td>35,0%</td>
+                            <td class="text-green">🟢</td>
+                        </tr>
+                        <tr class="bg-green">
+                            <td>1-3 dias</td>
+                            <td class="value-highlight">9</td>
+                            <td>6,3%</td>
+                            <td>41,3%</td>
+                            <td class="text-green">🟢</td>
+                        </tr>
+                        <tr class="bg-yellow">
+                            <td>4-7 dias</td>
+                            <td class="value-highlight">19</td>
+                            <td>13,3%</td>
+                            <td>54,5%</td>
+                            <td class="text-yellow">🟡</td>
+                        </tr>
+                        <tr class="bg-yellow">
+                            <td>8-15 dias</td>
+                            <td class="value-highlight">12</td>
+                            <td>8,4%</td>
+                            <td>62,9%</td>
+                            <td class="text-yellow">🟡</td>
+                        </tr>
+                        <tr class="bg-orange">
+                            <td>16-30 dias</td>
+                            <td class="value-highlight">13</td>
+                            <td>9,1%</td>
+                            <td>72,0%</td>
+                            <td class="text-orange">🟠</td>
+                        </tr>
+                        <tr class="bg-orange">
+                            <td>31-60 dias</td>
+                            <td class="value-highlight">14</td>
+                            <td>9,8%</td>
+                            <td>81,8%</td>
+                            <td class="text-orange">🟠</td>
+                        </tr>
+                        <tr class="bg-red">
+                            <td>> 60 dias</td>
+                            <td class="value-highlight">26</td>
+                            <td>18,2%</td>
+                            <td>100,0%</td>
+                            <td class="text-red">🔴</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL</td>
+                            <td class="value-highlight">143</td>
+                            <td>100,0%</td>
+                            <td>-</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Chart Prioridade -->
+            <div class="card">
+                <div class="card-title"><span>📊</span> Distribuição por Prioridade</div>
+                <div class="chart-container">
+                    <canvas id="chartPrioridade"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <div class="card">
+                <div class="card-title"><span>📊</span> Distribuição por CRO</div>
+                <div class="chart-container">
+                    <canvas id="chartCRO"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span>🏢</span> Tipo de Site</div>
+                <div class="chart-container">
+                    <canvas id="chartTipoSite"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span>⏱️</span> Aging - Tempo no Backlog</div>
+                <div class="chart-container">
+                    <canvas id="chartAging"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="charts-section" style="grid-template-columns: 1.5fr 1fr;">
+            <div class="card">
+                <div class="card-title"><span>🏙️</span> TOP 10 Municípios</div>
+                <div class="chart-container">
+                    <canvas id="chartMunicipio"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span>📈</span> Resumo Regional</div>
+                <div style="display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 12px; padding: 10px 0;">
+                    <div style="background: linear-gradient(90deg, rgba(99, 179, 237, 0.3), transparent); padding: 15px 20px; border-radius: 6px; border-left: 4px solid #63b3ed;">
+                        <div style="font-size: 1.8rem; font-weight: bold; color: #63b3ed;">72,7%</div>
+                        <div style="font-size: 0.8rem; color: #a0aec0;">PR/SC - Regional Dominante</div>
+                    </div>
+                    <div style="background: linear-gradient(90deg, rgba(104, 211, 145, 0.3), transparent); padding: 15px 20px; border-radius: 6px; border-left: 4px solid #68d391;">
+                        <div style="font-size: 1.8rem; font-weight: bold; color: #68d391;">25,9%</div>
+                        <div style="font-size: 0.8rem; color: #a0aec0;">RS - Segunda Regional</div>
+                    </div>
+                    <div style="background: linear-gradient(90deg, rgba(183, 148, 244, 0.3), transparent); padding: 15px 20px; border-radius: 6px; border-left: 4px solid #b794f4;">
+                        <div style="font-size: 1.8rem; font-weight: bold; color: #b794f4;">1,4%</div>
+                        <div style="font-size: 0.8rem; color: #a0aec0;">INT - Internacional</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerts Section -->
+        <section class="alerts-section">
+            <div class="alerts-title"><span>🚨</span> ALERTAS E INSIGHTS AUTOMÁTICOS</div>
+            <div class="alerts-grid">
+                <div class="alert-item warning">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-text">
+                        <span class="alert-label text-red">ALERTA 1:</span>
+                        TAs com Prioridade 1 pendentes: <strong class="text-red">45</strong> - Requerem ação IMEDIATA
+                    </div>
+                </div>
+                <div class="alert-item insight">
+                    <div class="alert-icon">💡</div>
+                    <div class="alert-text">
+                        <span class="alert-label text-blue">INSIGHT 1:</span>
+                        Regional PR/SC concentra <strong class="text-blue">72.7%</strong> do backlog total
+                    </div>
+                </div>
+                <div class="alert-item warning">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-text">
+                        <span class="alert-label text-red">ALERTA 2:</span>
+                        TAs com mais de 60 dias no backlog: <strong class="text-red">26 (18% do total)</strong>
+                    </div>
+                </div>
+                <div class="alert-item insight">
+                    <div class="alert-icon">💡</div>
+                    <div class="alert-text">
+                        <span class="alert-label text-blue">INSIGHT 2:</span>
+                        Concentradores representam <strong class="text-blue">49.0%</strong> das TAs
+                    </div>
+                </div>
+                <div class="alert-item warning">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-text">
+                        <span class="alert-label text-red">ALERTA 3:</span>
+                        Sites Críticos afetados: <strong class="text-red">20 sites</strong> requerem priorização
+                    </div>
+                </div>
+                <div class="alert-item insight">
+                    <div class="alert-icon">💡</div>
+                    <div class="alert-text">
+                        <span class="alert-label text-blue">INSIGHT 3:</span>
+                        Média de permanência no backlog: <strong class="text-blue">35 dias</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            Dashboard gerado automaticamente | Total de 143 TAs | Dados da Tabela1 | Atualização: 20/05/2026, 15:31
+        </footer>
+    </div>
+
+    <script>
+        // Configuração global dos gráficos
+        Chart.defaults.color = '#a0aec0';
+        Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+
+        // Gráfico de Prioridade (Pizza)
+        new Chart(document.getElementById('chartPrioridade'), {
+            type: 'pie',
+            data: {
+                labels: ['P1 - Crítica', 'P2 - Alta', 'P3 - Média', 'P4 - Baixa'],
+                datasets: [{
+                    data: [45, 19, 45, 34],
+                    backgroundColor: ['#fc8181', '#f6ad55', '#faf089', '#68d391'],
+                    borderColor: '#000',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 12, usePointStyle: true, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de CRO (Barras Horizontais)
+        new Chart(document.getElementById('chartCRO'), {
+            type: 'bar',
+            data: {
+                labels: ['PR/SC', 'RS', 'INT'],
+                datasets: [{
+                    label: 'Quantidade',
+                    data: [104, 37, 2],
+                    backgroundColor: ['#63b3ed', '#68d391', '#b794f4'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0aec0' } },
+                    y: { grid: { display: false }, ticks: { color: '#a0aec0' } }
+                }
+            }
+        });
+
+        // Gráfico de Tipo de Site (Doughnut)
+        new Chart(document.getElementById('chartTipoSite'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Concentrador', 'Ponta', 'Crítico', 'CCC'],
+                datasets: [{
+                    data: [70, 49, 20, 4],
+                    backgroundColor: ['#63b3ed', '#68d391', '#faf089', '#fc8181'],
+                    borderColor: '#000',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '55%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 12, usePointStyle: true, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Aging (Barras Verticais)
+        new Chart(document.getElementById('chartAging'), {
+            type: 'bar',
+            data: {
+                labels: ['≤24h', '1-3d', '4-7d', '8-15d', '16-30d', '31-60d', '>60d'],
+                datasets: [{
+                    label: 'Quantidade',
+                    data: [50, 9, 19, 12, 13, 14, 26],
+                    backgroundColor: ['#68d391', '#68d391', '#faf089', '#faf089', '#f6ad55', '#f6ad55', '#fc8181'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0aec0' } },
+                    x: { grid: { display: false }, ticks: { color: '#a0aec0' } }
+                }
+            }
+        });
+
+        // Gráfico de Municípios (Barras Horizontais)
+        new Chart(document.getElementById('chartMunicipio'), {
+            type: 'bar',
+            data: {
+                labels: ['CTA', 'CAN', 'BNU', 'CCO', 'FNS', 'NVG', 'JUU', 'PAE', 'SOO', 'PAC'],
+                datasets: [{
+                    label: 'Quantidade TAs',
+                    data: [13, 5, 4, 4, 3, 2, 2, 2, 1, 1],
+                    backgroundColor: '#63b3ed',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0aec0' } },
+                    y: { grid: { display: false }, ticks: { color: '#a0aec0' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
